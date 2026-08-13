@@ -624,6 +624,26 @@ The implementation phase must define a safe migration path from the historical d
 That migration work must not reshape the new contract merely to preserve historical API compatibility.
 
 
+### 18.1 Persistence foundation implementation
+
+The persistence foundation was implemented in `feat/join-persistence-foundation`.
+
+The inspected development database contained the historical `subscriber` table with zero rows, so no duplicate emails, null email data, or other incompatible records blocked the migration.
+
+Flyway strategy:
+
+- explicit baseline at version 1 for the existing historical schema;
+- V2 migrates to the canonical Join persistence model;
+- V3 aligns `management_token_hash` to `VARCHAR(64)`;
+- automatic `baseline-on-migrate` is not used;
+- historical columns remain in place to avoid destructive migration.
+
+Hibernate now uses `spring.jpa.hibernate.ddl-auto=validate`.
+
+Persistence tests currently report 5 tests, 0 failures, 0 errors, and `BUILD SUCCESS`.
+
+
+
 ## 19. Email Strategy
 
 ### 19.1 Welcome email

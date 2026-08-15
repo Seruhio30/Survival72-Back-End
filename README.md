@@ -59,11 +59,20 @@ Incluye:
 - acceso inválido, desconocido, revocado o no gestionable devuelve `404 Not Found`
   neutral con código `SUBSCRIPTION_ACCESS_NOT_FOUND`;
 - payload PATCH inválido devuelve `400 Bad Request`;
-- sin unsubscribe, email, frontend ni admin en este bloque.
+- lifecycle interno de unsubscribe implementado mediante management token;
+- unsubscribe resuelve exclusivamente `raw token -> SHA-256 -> managementTokenHash`;
+- solo una suscripción `ACTIVE` con token vigente puede cancelarse;
+- unsubscribe cambia `ACTIVE -> UNSUBSCRIBED`, establece `unsubscribedAt` y
+  `updatedAt`, y revoca `managementTokenHash` dentro de la misma transacción;
+- la fila del subscriber, email, perfil, `subscribedAt` y preferencias se conservan;
+- tokens inválidos, desconocidos, blank, revocados o no gestionables fallan de
+  forma interna neutral mediante `SubscriptionAccessException`;
+- el endpoint HTTP de unsubscribe todavía NO está expuesto;
+- email, frontend y admin siguen pendientes.
 
 Validación actual completa:
 
-- 68 pruebas;
+- 79 pruebas;
 - 0 fallos;
 - 0 errores;
 - `BUILD SUCCESS`.

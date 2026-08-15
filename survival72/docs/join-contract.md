@@ -1007,6 +1007,31 @@ Implemented at the HTTP boundary:
 - HTTP responses expose only `firstName`, `countryCode`, and `preferences`;
 - PATCH does not rotate the management token.
 
+The internal unsubscribe lifecycle is now implemented.
+
+Implemented internally:
+
+- `SubscriptionUnsubscribeService` provides the transactional unsubscribe boundary;
+- unsubscribe accepts only the raw management token as authorization input;
+- the raw token is hashed through the existing `ManagementTokenService`;
+- `SubscriberRepository.findByManagementTokenHash(...)` resolves the subscriber;
+- no email, subscriber ID, query parameter, path token, or JWT is used for
+  authorization;
+- only an `ACTIVE` subscriber with a valid current management token can
+  complete unsubscribe;
+- successful unsubscribe changes `ACTIVE -> UNSUBSCRIBED`;
+- `unsubscribedAt` and `updatedAt` are set to the current timestamp;
+- `managementTokenHash` is cleared in the same transaction, revoking the
+  credential;
+- the subscriber row, ID, email, first name, country code, `subscribedAt`,
+  and preferences are preserved;
+- invalid, unknown, blank, null, revoked, or otherwise non-manageable tokens
+  fail neutrally through `SubscriptionAccessException`;
+- a successfully revoked token no longer resolves through repository or
+  subscription-management access;
+- no physical subscriber deletion or preference deletion occurs;
+- no HTTP unsubscribe endpoint is exposed by this service foundation.
+
 Still pending:
 
 - unsubscribe HTTP endpoint;

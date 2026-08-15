@@ -67,12 +67,17 @@ Incluye:
 - la fila del subscriber, email, perfil, `subscribedAt` y preferencias se conservan;
 - tokens inválidos, desconocidos, blank, revocados o no gestionables fallan de
   forma interna neutral mediante `SubscriptionAccessException`;
-- el endpoint HTTP de unsubscribe todavía NO está expuesto;
+- `POST /api/subscriptions/unsubscribe` expone la frontera HTTP de cancelación;
+- autorización exclusivamente mediante `Authorization: Bearer <management-token>`;
+- el endpoint no acepta email, ID ni token en query/path y no requiere body;
+- éxito devuelve `200 OK` con respuesta pública neutral `UNSUBSCRIBED`;
+- acceso inválido, desconocido, revocado o no gestionable devuelve `404 Not Found`
+  neutral con código `SUBSCRIPTION_ACCESS_NOT_FOUND`;
 - email, frontend y admin siguen pendientes.
 
 Validación actual completa:
 
-- 79 pruebas;
+- 92 pruebas;
 - 0 fallos;
 - 0 errores;
 - `BUILD SUCCESS`.

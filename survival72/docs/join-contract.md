@@ -1007,9 +1007,9 @@ Implemented at the HTTP boundary:
 - HTTP responses expose only `firstName`, `countryCode`, and `preferences`;
 - PATCH does not rotate the management token.
 
-The internal unsubscribe lifecycle is now implemented.
+The unsubscribe lifecycle and its HTTP boundary are now implemented.
 
-Implemented internally:
+Implemented:
 
 - `SubscriptionUnsubscribeService` provides the transactional unsubscribe boundary;
 - unsubscribe accepts only the raw management token as authorization input;
@@ -1030,14 +1030,28 @@ Implemented internally:
 - a successfully revoked token no longer resolves through repository or
   subscription-management access;
 - no physical subscriber deletion or preference deletion occurs;
-- no HTTP unsubscribe endpoint is exposed by this service foundation.
+- `POST /api/subscriptions/unsubscribe` exposes the canonical HTTP boundary;
+- the endpoint accepts no request body and authorizes only with
+  `Authorization: Bearer <management-token>`;
+- the controller delegates lifecycle behavior exclusively to
+  `SubscriptionUnsubscribeService`;
+- successful HTTP unsubscribe returns `200 OK` with public status
+  `UNSUBSCRIBED` and message `Subscription cancelled successfully.`;
+- invalid, unknown, revoked, blank, missing, or otherwise non-manageable
+  credentials map neutrally to `404 Not Found` with code
+  `SUBSCRIPTION_ACCESS_NOT_FOUND`;
+- email, subscriber ID, query parameters, and path tokens are not accepted as
+  authorization;
+- GET does not perform unsubscribe.
 
 Still pending:
 
-- unsubscribe HTTP endpoint;
 - email integration;
 - frontend integration;
-- admin integration.
+- admin integration;
+- legacy cleanup;
+- CORS redesign;
+- historical secret rotation.
 
 ### Stage 4 — Subscription management
 
@@ -1051,9 +1065,19 @@ Implemented:
 
 ### Stage 5 — Unsubscribe
 
-Implement `POST /api/subscriptions/unsubscribe`.
+Implemented:
 
-Cover status transition, timestamps, token revocation, and repeated or revoked token behavior.
+- `POST /api/subscriptions/unsubscribe`;
+- Bearer-token extraction and HTTP mapping;
+- no request body;
+- delegation to `SubscriptionUnsubscribeService`;
+- `200 OK` public response with `UNSUBSCRIBED`;
+- neutral `404 Not Found` mapping with code
+  `SUBSCRIPTION_ACCESS_NOT_FOUND`;
+- GET does not execute unsubscribe;
+- no email, ID, query parameter, or path token is accepted as authorization;
+- status transition, timestamps, token revocation, and revoked/non-manageable
+  credential behavior remain owned by the service layer.
 
 ### Stage 6 — Email integration
 

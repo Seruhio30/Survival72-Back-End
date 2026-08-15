@@ -53,13 +53,17 @@ Incluye:
   timestamps ni credenciales;
 - actualización interna limitada a `firstName`, `countryCode` y `preferences`;
 - acceso de gestión permitido únicamente para suscripciones `ACTIVE`;
-- `GET /api/subscriptions/manage` y `PATCH /api/subscriptions/manage` todavía no
-  están expuestos por HTTP;
-- sin unsubscribe, email ni frontend en este bloque.
+- `GET /api/subscriptions/manage` y `PATCH /api/subscriptions/manage` ya están
+  expuestos mediante `Authorization: Bearer <management-token>`;
+- GET/PATCH devuelven únicamente `firstName`, `countryCode` y `preferences`;
+- acceso inválido, desconocido, revocado o no gestionable devuelve `404 Not Found`
+  neutral con código `SUBSCRIPTION_ACCESS_NOT_FOUND`;
+- payload PATCH inválido devuelve `400 Bad Request`;
+- sin unsubscribe, email, frontend ni admin en este bloque.
 
 Validación actual completa:
 
-- 50 pruebas;
+- 68 pruebas;
 - 0 fallos;
 - 0 errores;
 - `BUILD SUCCESS`.

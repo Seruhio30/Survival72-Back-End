@@ -915,15 +915,39 @@ No public Join endpoint should be implemented before the persistence contract is
 
 ### Stage 3 — Join lifecycle
 
-Implement `POST /api/join`.
+Status: application/domain lifecycle foundation implemented in
+`feat/join-service-foundation`.
 
-Cover:
+Implemented:
 
-- new subscriber;
-- duplicate active subscriber;
-- rejoin;
-- token generation and hashing;
-- neutral public response.
+- `JoinService` as the transactional application service;
+- `JoinCommand` as the internal input model;
+- `JoinResult` and `JoinOutcome` as internal lifecycle results;
+- new subscriber creation with `ACTIVE` status;
+- normalized lowercase email;
+- optional trimmed `firstName`, with blank values normalized to `null`;
+- uppercase two-letter alphabetic `countryCode`;
+- validation requiring at least one preference;
+- duplicate active Join handled idempotently without modifying profile,
+  preferences, timestamps, or management token;
+- rejoin using the same subscriber row;
+- rejoin profile and preference replacement;
+- rejoin lifecycle timestamps and clearing of `unsubscribedAt`;
+- cryptographically random 32-byte opaque management tokens;
+- URL-safe Base64 encoding without padding;
+- SHA-256 lowercase hexadecimal token hashing;
+- persistence of only the token hash;
+- raw management token returned only through the internal application result
+  for new subscriptions and rejoins;
+- transactional persistence through `SubscriberRepository`.
+
+Validated scenarios include new Join, preference persistence, token hashing,
+active duplicate behavior, rejoin behavior, normalization, and controlled
+validation failures.
+
+The HTTP boundary is intentionally not implemented in this stage foundation.
+`POST /api/join`, public request/response DTOs, Bean Validation at the HTTP
+boundary, and the neutral public response remain for the next API block.
 
 ### Stage 4 — Subscription management
 

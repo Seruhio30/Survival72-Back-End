@@ -25,6 +25,31 @@ Estado actual:
 - `management_token_hash` alineado a `VARCHAR(64)` mediante V3;
 - `subscriber_preferences` persiste las preferencias en tabla separada;
 - las columnas históricas se conservan para evitar una migración destructiva;
-- 5 pruebas de persistencia, 0 fallos, 0 errores, BUILD SUCCESS.
+- 5 pruebas de persistencia, 0 fallos, 0 errores.
+
+## Join service foundation
+
+La capa de aplicación del lifecycle de Join ya está implementada.
+
+Incluye:
+
+- creación de nuevas suscripciones `ACTIVE`;
+- normalización y validación interna de datos;
+- Join duplicado activo idempotente;
+- rejoin reutilizando la misma fila;
+- actualización de preferencias durante rejoin;
+- generación de tokens opacos aleatorios de 32 bytes;
+- persistencia exclusiva del hash SHA-256 del token;
+- resultados internos diferenciados para `NEW_SUBSCRIPTION`,
+  `ACTIVE_DUPLICATE` y `REJOINED`;
+- transacciones mediante `JoinService`;
+- sin controllers, endpoints públicos, email ni frontend en este bloque.
+
+Validación actual completa:
+
+- 21 pruebas;
+- 0 fallos;
+- 0 errores;
+- `BUILD SUCCESS`.
 
 El contrato detallado se encuentra en `survival72/docs/join-contract.md`.

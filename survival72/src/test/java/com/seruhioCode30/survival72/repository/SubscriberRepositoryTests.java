@@ -87,6 +87,24 @@ class SubscriberRepositoryTests {
     }
 
     @Test
+    void findsSubscriberByManagementTokenHash() {
+        Subscriber subscriber = createSubscriber("management-token@example.com");
+        subscriber.setManagementTokenHash(
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        );
+
+        subscriberRepository.saveAndFlush(subscriber);
+
+        assertThat(subscriberRepository.findByManagementTokenHash(
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ))
+                .isPresent()
+                .get()
+                .extracting(Subscriber::getEmail)
+                .isEqualTo("management-token@example.com");
+    }
+
+    @Test
     void rejectsDuplicateEmail() {
         subscriberRepository.saveAndFlush(createSubscriber("duplicate@example.com"));
 

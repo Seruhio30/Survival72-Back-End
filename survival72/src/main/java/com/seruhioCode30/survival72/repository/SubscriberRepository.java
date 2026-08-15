@@ -9,5 +9,7 @@ import java.util.Optional;
 @Repository
 public interface SubscriberRepository extends JpaRepository<Subscriber, Long> {
     Optional<Subscriber> findByEmail(String email);
+
+    Optional<Subscriber> findByManagementTokenHash(String managementTokenHash);
 }
 

@@ -43,11 +43,15 @@ Incluye:
 - resultados internos diferenciados para `NEW_SUBSCRIPTION`,
   `ACTIVE_DUPLICATE` y `REJOINED`;
 - transacciones mediante `JoinService`;
-- sin controllers, endpoints públicos, email ni frontend en este bloque.
+- frontera HTTP inicial implementada mediante `POST /api/join`;
+- DTO público de request con Bean Validation;
+- respuesta pública neutral `REQUEST_ACCEPTED` para NEW, ACTIVE_DUPLICATE y REJOIN;
+- manejo controlado de `400 Bad Request` para payload inválido;
+- sin email, management, unsubscribe ni frontend en este bloque.
 
 Validación actual completa:
 
-- 21 pruebas;
+- 33 pruebas;
 - 0 fallos;
 - 0 errores;
 - `BUILD SUCCESS`.

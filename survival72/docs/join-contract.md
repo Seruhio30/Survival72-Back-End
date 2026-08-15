@@ -945,9 +945,33 @@ Validated scenarios include new Join, preference persistence, token hashing,
 active duplicate behavior, rejoin behavior, normalization, and controlled
 validation failures.
 
-The HTTP boundary is intentionally not implemented in this stage foundation.
-`POST /api/join`, public request/response DTOs, Bean Validation at the HTTP
-boundary, and the neutral public response remain for the next API block.
+The initial HTTP boundary is now implemented through `POST /api/join`.
+
+Implemented at the HTTP boundary:
+
+- `JoinController` delegates to `JoinService`;
+- `JoinRequest` is the public request DTO;
+- Bean Validation protects required email, valid email format, maximum email
+  length, optional `firstName` length, two-letter alphabetic `countryCode`,
+  and at least one `SubscriberPreference`;
+- request mapping is `JoinRequest -> JoinCommand -> JoinService.join(...)`;
+- NEW_SUBSCRIPTION, ACTIVE_DUPLICATE, and REJOINED all return the same public
+  `200 OK` response;
+- the public response is:
+  `{"status":"REQUEST_ACCEPTED","message":"Join request processed."}`;
+- raw management tokens, token hashes, internal IDs, `Subscriber`, and
+  `JoinOutcome` are not exposed through HTTP;
+- invalid Bean Validation payloads and unreadable JSON / invalid enum values
+  return a controlled `400 Bad Request`;
+- the Join-specific HTTP error handler does not expose stack traces, SQL,
+  internal class names, or lifecycle details.
+
+Still pending:
+
+- management HTTP endpoints;
+- unsubscribe HTTP endpoint;
+- email integration;
+- frontend integration.
 
 ### Stage 4 — Subscription management
 

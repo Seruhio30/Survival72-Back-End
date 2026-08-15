@@ -354,8 +354,7 @@ Conceptual DTO: `SubscriptionManagementResponse`
   "preferences": [
     "GENERAL_PREPAREDNESS",
     "EMERGENCY_KIT"
-  ],
-  "status": "ACTIVE"
+  ]
 }
 ```
 
@@ -400,10 +399,16 @@ The subscriber may not directly modify email, status, timestamps, management cre
 
 Success: `200 OK`.
 
+Conceptual DTO: `SubscriptionManagementResponse`
+
 ```json
 {
-  "status": "UPDATED",
-  "message": "Subscription preferences updated successfully."
+  "firstName": "Sergio",
+  "countryCode": "CR",
+  "preferences": [
+    "GENERAL_PREPAREDNESS",
+    "EDUCATIONAL_CONTENT"
+  ]
 }
 ```
 
@@ -987,19 +992,31 @@ Implemented internally:
 - management reads use a read-only transaction and updates use a transactional
   write boundary.
 
+The subscription-management HTTP boundary is now implemented.
+
+Implemented at the HTTP boundary:
+
+- `GET /api/subscriptions/manage`;
+- `PATCH /api/subscriptions/manage`;
+- `Authorization: Bearer <management-token>` extraction;
+- public management request and response DTOs;
+- controlled `404 Not Found` mapping with code
+  `SUBSCRIPTION_ACCESS_NOT_FOUND` for invalid, unknown, revoked, blank,
+  or otherwise non-manageable credentials;
+- controlled `400 Bad Request` responses for invalid PATCH payloads;
+- HTTP responses expose only `firstName`, `countryCode`, and `preferences`;
+- PATCH does not rotate the management token.
+
 Still pending:
 
-- `GET /api/subscriptions/manage` HTTP boundary;
-- `PATCH /api/subscriptions/manage` HTTP boundary;
 - unsubscribe HTTP endpoint;
 - email integration;
-- frontend integration.
+- frontend integration;
+- admin integration.
 
 ### Stage 4 — Subscription management
 
-Internal management authorization and profile update logic are implemented.
-
-Still to implement:
+Implemented:
 
 - `GET /api/subscriptions/manage`;
 - `PATCH /api/subscriptions/manage`;

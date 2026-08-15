@@ -966,21 +966,46 @@ Implemented at the HTTP boundary:
 - the Join-specific HTTP error handler does not expose stack traces, SQL,
   internal class names, or lifecycle details.
 
+The internal subscription-management service foundation is now implemented.
+
+Implemented internally:
+
+- raw management tokens are hashed with SHA-256 before lookup;
+- `SubscriberRepository` resolves subscribers by `managementTokenHash`;
+- management authorization never uses email or public IDs;
+- only `ACTIVE` subscribers with a valid current token are manageable;
+- invalid, unknown, blank, revoked, and non-manageable access resolves through
+  the internal `SubscriptionAccessException`;
+- `SubscriptionManagementView` exposes only `firstName`, `countryCode`, and
+  preferences;
+- `UpdateSubscriptionCommand` accepts only `firstName`, `countryCode`, and
+  preferences;
+- updates normalize `firstName`, uppercase and validate `countryCode`, replace
+  preferences completely, and update `updatedAt`;
+- profile updates do not change email, status, lifecycle timestamps directly,
+  or the management token hash;
+- management reads use a read-only transaction and updates use a transactional
+  write boundary.
+
 Still pending:
 
-- management HTTP endpoints;
+- `GET /api/subscriptions/manage` HTTP boundary;
+- `PATCH /api/subscriptions/manage` HTTP boundary;
 - unsubscribe HTTP endpoint;
 - email integration;
 - frontend integration.
 
 ### Stage 4 — Subscription management
 
-Implement:
+Internal management authorization and profile update logic are implemented.
+
+Still to implement:
 
 - `GET /api/subscriptions/manage`;
-- `PATCH /api/subscriptions/manage`.
-
-Cover Bearer token validation, allowed editable fields, and invalid or revoked token behavior.
+- `PATCH /api/subscriptions/manage`;
+- Bearer-token extraction and HTTP mapping;
+- public management request/response DTOs;
+- HTTP mapping for invalid or revoked token behavior.
 
 ### Stage 5 — Unsubscribe
 

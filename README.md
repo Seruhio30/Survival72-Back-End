@@ -47,11 +47,19 @@ Incluye:
 - DTO público de request con Bean Validation;
 - respuesta pública neutral `REQUEST_ACCEPTED` para NEW, ACTIVE_DUPLICATE y REJOIN;
 - manejo controlado de `400 Bad Request` para payload inválido;
-- sin email, management, unsubscribe ni frontend en este bloque.
+- capa interna de gestión de suscripciones implementada mediante management token;
+- resolución exclusiva mediante SHA-256 de `managementTokenHash`;
+- lectura interna mediante `SubscriptionManagementView`, sin exponer entidad, ID,
+  timestamps ni credenciales;
+- actualización interna limitada a `firstName`, `countryCode` y `preferences`;
+- acceso de gestión permitido únicamente para suscripciones `ACTIVE`;
+- `GET /api/subscriptions/manage` y `PATCH /api/subscriptions/manage` todavía no
+  están expuestos por HTTP;
+- sin unsubscribe, email ni frontend en este bloque.
 
 Validación actual completa:
 
-- 33 pruebas;
+- 50 pruebas;
 - 0 fallos;
 - 0 errores;
 - `BUILD SUCCESS`.

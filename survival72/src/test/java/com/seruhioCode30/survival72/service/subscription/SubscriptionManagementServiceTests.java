@@ -264,8 +264,8 @@ class SubscriptionManagementServiceTests {
                         "Sergio",
                         "CR",
                         Set.of(
-                                SubscriberPreference.EDUCATIONAL_CONTENT,
-                                SubscriberPreference.EVENTS_AND_TRAINING
+                                SubscriberPreference.PRACTICAL_SKILLS,
+                                SubscriberPreference.EVENTS_AND_UPDATES
                         )
                 )
         );
@@ -276,8 +276,8 @@ class SubscriptionManagementServiceTests {
 
         assertThat(reloaded.getPreferences())
                 .containsExactlyInAnyOrder(
-                        SubscriberPreference.EDUCATIONAL_CONTENT,
-                        SubscriberPreference.EVENTS_AND_TRAINING
+                        SubscriberPreference.PRACTICAL_SKILLS,
+                        SubscriberPreference.EVENTS_AND_UPDATES
                 );
     }
 
@@ -349,7 +349,7 @@ class SubscriptionManagementServiceTests {
                 new UpdateSubscriptionCommand(
                         "Updated",
                         "US",
-                        Set.of(SubscriberPreference.EDUCATIONAL_CONTENT)
+                        Set.of(SubscriberPreference.PRACTICAL_SKILLS)
                 )
         );
 
@@ -378,7 +378,7 @@ class SubscriptionManagementServiceTests {
                 new UpdateSubscriptionCommand(
                         "Updated",
                         "US",
-                        Set.of(SubscriberPreference.EDUCATIONAL_CONTENT)
+                        Set.of(SubscriberPreference.PRACTICAL_SKILLS)
                 )
         );
 

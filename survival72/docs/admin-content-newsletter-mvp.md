@@ -45,8 +45,8 @@ Canonical subscriber preferences are:
 
 - `GENERAL_PREPAREDNESS`
 - `EMERGENCY_KIT`
-- `EDUCATIONAL_CONTENT`
-- `EVENTS_AND_TRAINING`
+- `PRACTICAL_SKILLS`
+- `EVENTS_AND_UPDATES`
 
 Canonical subscriber statuses are:
 
@@ -562,7 +562,7 @@ Example:
 If a newsletter selects:
 
 - `EMERGENCY_KIT`
-- `EDUCATIONAL_CONTENT`
+- `PRACTICAL_SKILLS`
 
 then an ACTIVE subscriber matching either preference is included.
 

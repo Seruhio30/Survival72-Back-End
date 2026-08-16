@@ -106,8 +106,8 @@ The initial canonical preferences are:
 
 - `GENERAL_PREPAREDNESS`
 - `EMERGENCY_KIT`
-- `EDUCATIONAL_CONTENT`
-- `EVENTS_AND_TRAINING`
+- `PRACTICAL_SKILLS`
+- `EVENTS_AND_UPDATES`
 
 ### 4.1 Meaning
 
@@ -119,13 +119,13 @@ General emergency preparedness, family planning, recommendations, and preparedne
 
 72-hour kits, water, food, supplies, and related preparation.
 
-#### EDUCATIONAL_CONTENT
+#### PRACTICAL_SKILLS
 
-Guides, PDFs, videos, educational resources, and new learning material.
+Emergency response and practical preparedness skills, including first aid and what to do before, during, and after emergencies.
 
-#### EVENTS_AND_TRAINING
+#### EVENTS_AND_UPDATES
 
-Classes, workshops, talks, training sessions, and related activities.
+Survival72 talks, workshops, new guides, featured videos, and important project updates.
 
 ### 4.2 Preference rules
 
@@ -384,7 +384,7 @@ Conceptual DTO: `UpdateSubscriptionPreferencesRequest`
   "countryCode": "CR",
   "preferences": [
     "GENERAL_PREPAREDNESS",
-    "EDUCATIONAL_CONTENT"
+    "PRACTICAL_SKILLS"
   ]
 }
 ```
@@ -407,7 +407,7 @@ Conceptual DTO: `SubscriptionManagementResponse`
   "countryCode": "CR",
   "preferences": [
     "GENERAL_PREPAREDNESS",
-    "EDUCATIONAL_CONTENT"
+    "PRACTICAL_SKILLS"
   ]
 }
 ```

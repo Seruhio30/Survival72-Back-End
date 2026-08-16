@@ -223,7 +223,8 @@ class AdminContentServiceTests {
                         null,
                         Set.of(
                                 SubscriberPreference.EMERGENCY_KIT,
-                                SubscriberPreference.EDUCATIONAL_CONTENT
+                                SubscriberPreference.PRACTICAL_SKILLS,
+                                SubscriberPreference.EVENTS_AND_UPDATES
                         )
                 )
         );
@@ -231,7 +232,8 @@ class AdminContentServiceTests {
         assertThat(response.title()).isEqualTo("Updated");
         assertThat(response.preferences()).containsExactlyInAnyOrder(
                 SubscriberPreference.EMERGENCY_KIT,
-                SubscriberPreference.EDUCATIONAL_CONTENT
+                SubscriberPreference.PRACTICAL_SKILLS,
+                SubscriberPreference.EVENTS_AND_UPDATES
         );
     }
 

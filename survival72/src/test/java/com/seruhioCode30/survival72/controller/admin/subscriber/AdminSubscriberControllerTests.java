@@ -118,7 +118,7 @@ class AdminSubscriberControllerTests {
                 2,
                 15,
                 "ACTIVE",
-                "EDUCATIONAL_CONTENT"
+                "EVENTS_AND_UPDATES"
         )).thenReturn(
                 new AdminSubscriberPageResponse(
                         List.of(),
@@ -134,7 +134,7 @@ class AdminSubscriberControllerTests {
                         .param("page", "2")
                         .param("size", "15")
                         .param("status", "ACTIVE")
-                        .param("preference", "EDUCATIONAL_CONTENT")
+                        .param("preference", "EVENTS_AND_UPDATES")
                         .with(user("test-admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.page").value(2))

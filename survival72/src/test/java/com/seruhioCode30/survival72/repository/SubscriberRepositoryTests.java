@@ -127,4 +127,127 @@ class SubscriberRepositoryTests {
 
         return subscriber;
     }
+
+    @Test
+    void findsSubscribersByStatusWithPagination() {
+        Subscriber active = createSubscriber("status-active@example.com");
+        active.setStatus(SubscriberStatus.ACTIVE);
+
+        Subscriber unsubscribed = createSubscriber("status-unsubscribed@example.com");
+        unsubscribed.setStatus(SubscriberStatus.UNSUBSCRIBED);
+        unsubscribed.setUnsubscribedAt(LocalDateTime.now());
+
+        subscriberRepository.saveAllAndFlush(Set.of(active, unsubscribed));
+
+        var page = subscriberRepository.findByStatus(
+                SubscriberStatus.ACTIVE,
+                org.springframework.data.domain.PageRequest.of(
+                        0,
+                        20,
+                        org.springframework.data.domain.Sort.by(
+                                org.springframework.data.domain.Sort.Order.desc("subscribedAt"),
+                                org.springframework.data.domain.Sort.Order.desc("id")
+                        )
+                )
+        );
+
+        assertThat(page.getContent())
+                .extracting(Subscriber::getEmail)
+                .contains("status-active@example.com")
+                .doesNotContain("status-unsubscribed@example.com");
+    }
+
+    @Test
+    void findsSubscribersByPreferenceWithoutDuplicates() {
+        Subscriber subscriber = createSubscriber("preference-filter@example.com");
+        subscriber.setPreferences(Set.of(
+                SubscriberPreference.EMERGENCY_KIT,
+                SubscriberPreference.EDUCATIONAL_CONTENT
+        ));
+
+        subscriberRepository.saveAndFlush(subscriber);
+
+        var page = subscriberRepository.findByPreference(
+                SubscriberPreference.EMERGENCY_KIT,
+                org.springframework.data.domain.PageRequest.of(0, 20)
+        );
+
+        assertThat(page.getContent())
+                .filteredOn(item -> item.getEmail().equals("preference-filter@example.com"))
+                .hasSize(1);
+    }
+
+    @Test
+    void findsSubscribersByStatusAndPreference() {
+        Subscriber matching = createSubscriber("combined-match@example.com");
+        matching.setStatus(SubscriberStatus.ACTIVE);
+        matching.setPreferences(Set.of(SubscriberPreference.EDUCATIONAL_CONTENT));
+
+        Subscriber wrongStatus = createSubscriber("combined-wrong-status@example.com");
+        wrongStatus.setStatus(SubscriberStatus.UNSUBSCRIBED);
+        wrongStatus.setUnsubscribedAt(LocalDateTime.now());
+        wrongStatus.setPreferences(Set.of(SubscriberPreference.EDUCATIONAL_CONTENT));
+
+        Subscriber wrongPreference = createSubscriber("combined-wrong-preference@example.com");
+        wrongPreference.setStatus(SubscriberStatus.ACTIVE);
+        wrongPreference.setPreferences(Set.of(SubscriberPreference.EMERGENCY_KIT));
+
+        subscriberRepository.saveAllAndFlush(
+                Set.of(matching, wrongStatus, wrongPreference)
+        );
+
+        var page = subscriberRepository.findByStatusAndPreference(
+                SubscriberStatus.ACTIVE,
+                SubscriberPreference.EDUCATIONAL_CONTENT,
+                org.springframework.data.domain.PageRequest.of(0, 20)
+        );
+
+        assertThat(page.getContent())
+                .extracting(Subscriber::getEmail)
+                .contains("combined-match@example.com")
+                .doesNotContain(
+                        "combined-wrong-status@example.com",
+                        "combined-wrong-preference@example.com"
+                );
+    }
+
+    @Test
+    void usesStableSubscribedAtAndIdDescendingOrder() {
+        LocalDateTime older = LocalDateTime.of(2026, 8, 15, 10, 0);
+        LocalDateTime newer = LocalDateTime.of(2026, 8, 16, 10, 0);
+
+        Subscriber olderSubscriber = createSubscriber("order-older@example.com");
+        olderSubscriber.setSubscribedAt(older);
+        olderSubscriber.setUpdatedAt(older);
+
+        Subscriber newerSubscriber = createSubscriber("order-newer@example.com");
+        newerSubscriber.setSubscribedAt(newer);
+        newerSubscriber.setUpdatedAt(newer);
+
+        subscriberRepository.saveAndFlush(olderSubscriber);
+        subscriberRepository.saveAndFlush(newerSubscriber);
+
+        var page = subscriberRepository.findAll(
+                org.springframework.data.domain.PageRequest.of(
+                        0,
+                        20,
+                        org.springframework.data.domain.Sort.by(
+                                org.springframework.data.domain.Sort.Order.desc("subscribedAt"),
+                                org.springframework.data.domain.Sort.Order.desc("id")
+                        )
+                )
+        );
+
+        int newerIndex = page.getContent().stream()
+                .map(Subscriber::getEmail)
+                .toList()
+                .indexOf("order-newer@example.com");
+
+        int olderIndex = page.getContent().stream()
+                .map(Subscriber::getEmail)
+                .toList()
+                .indexOf("order-older@example.com");
+
+        assertThat(newerIndex).isLessThan(olderIndex);
+    }
 }

@@ -173,23 +173,47 @@ No graphs or sophisticated analytics are required.
 
 The subscriber screen is read-only for the MVP.
 
-It should show useful canonical fields such as:
+The backend read model is implemented through:
 
-- first name;
+`GET /api/admin/subscribers`
+
+The endpoint:
+
+- requires an authenticated Admin session through the existing Spring Security foundation;
+- uses database-backed Spring Data pagination;
+- accepts `page` starting at `0`;
+- uses a default `size` of `20`;
+- rejects sizes above `100`;
+- supports optional `status` and `preference` filters;
+- combines both filters with `status AND preference` semantics;
+- orders results by `subscribedAt DESC, id DESC`;
+- avoids duplicate subscribers when filtering through `subscriber_preferences`;
+- returns controlled `400 BAD_REQUEST` responses for invalid query parameters.
+
+The administrative DTO exposes only:
+
+- id;
 - email;
+- first name;
 - country code;
-- preferences;
-- subscription status;
-- subscription date.
-
-Useful filters may include:
-
 - status;
-- preference.
+- preferences;
+- subscribed timestamp;
+- updated timestamp;
+- unsubscribed timestamp.
 
-Pagination should be used instead of loading every subscriber at once.
+The endpoint does not serialize the `Subscriber` JPA entity.
 
-The MVP must not expose management tokens or token hashes.
+The MVP deliberately does not expose:
+
+- `managementTokenHash`;
+- raw management tokens;
+- session identifiers;
+- password material;
+- legacy transient subscriber fields;
+- unnecessary persistence internals.
+
+Pagination must be used instead of loading every subscriber at once.
 
 ### 5.4 Content / Videos
 

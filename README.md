@@ -158,6 +158,23 @@ Incluye:
 - endpoint técnico `/api/admin/security-check` limitado a este foundation para
   validar autorización y CSRF; no constituye un dashboard;
 - no se implementaron Content, Newsletter, subscriber admin UI, dashboard visual
+
+## Admin subscriber read model
+
+La lectura administrativa segura de subscribers ya está implementada mediante:
+
+- `GET /api/admin/subscribers`;
+- acceso exclusivo con sesión Admin válida bajo la protección existente de `/api/admin/**`;
+- paginación real con `page` desde `0`, `size` por defecto `20` y máximo `100`;
+- filtros opcionales por `status` y `preference`;
+- combinación de filtros con semántica `status AND preference`;
+- orden estable por `subscribedAt DESC, id DESC`;
+- respuesta mediante DTO administrativo controlado, sin serializar la entidad `Subscriber`;
+- campos expuestos: `id`, `email`, `firstName`, `countryCode`, `status`, `preferences`, `subscribedAt`, `updatedAt` y `unsubscribedAt`;
+- `managementTokenHash`, tokens raw, campos legacy transitorios y otros datos internos permanecen ocultos;
+- valores inválidos de `page`, `size`, `status` o `preference` devuelven `400 BAD_REQUEST` controlado.
+
+- no se implementaron Content, Newsletter, subscriber admin UI, dashboard visual
   ni analytics.
 
 La configuración productiva definitiva de CORS/cookies depende del dominio HTTPS

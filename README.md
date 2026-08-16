@@ -157,7 +157,8 @@ Incluye:
   como fallback local; producción HTTPS deberá configurarlo como `true`;
 - endpoint técnico `/api/admin/security-check` limitado a este foundation para
   validar autorización y CSRF; no constituye un dashboard;
-- no se implementaron Content, Newsletter, subscriber admin UI, dashboard visual
+- Content se implementa de forma separada mediante la base administrativa descrita más abajo;
+- no se implementaron Newsletter, subscriber admin UI ni dashboard visual.
 
 ## Admin subscriber read model
 
@@ -174,8 +175,38 @@ La lectura administrativa segura de subscribers ya está implementada mediante:
 - `managementTokenHash`, tokens raw, campos legacy transitorios y otros datos internos permanecen ocultos;
 - valores inválidos de `page`, `size`, `status` o `preference` devuelven `400 BAD_REQUEST` controlado.
 
-- no se implementaron Content, Newsletter, subscriber admin UI, dashboard visual
+- no se implementaron Newsletter, subscriber admin UI, dashboard visual
   ni analytics.
+
+## Admin content foundation
+
+La gestión administrativa mínima de contenido ya está implementada en backend.
+
+Incluye:
+
+- entidad `ContentItem`;
+- tipos `VIDEO` y `ARTICLE`;
+- estados `DRAFT`, `PUBLISHED` y `ARCHIVED`;
+- cero o varias preferencias canónicas mediante `SubscriberPreference`;
+- persistencia Flyway en `content_item` y `content_item_preferences`;
+- YouTube mediante ID canónico de 11 caracteres, aceptando ID directo,
+  `youtube.com/watch?v=...` y `youtu.be/...`;
+- ningún archivo de video, llamada a YouTube API ni metadata externa;
+- `ARTICLE` rechaza valores YouTube y conserva `youtubeVideoId = null`;
+- `VIDEO` requiere un identificador YouTube válido;
+- publicación establece `publishedAt` únicamente cuando todavía está vacío;
+- archivado conserva el contenido y no realiza borrado físico;
+- `GET /api/admin/content` paginado, con `page=0`, `size=20`, máximo `100`,
+  filtros opcionales `type` y `status`, y orden `createdAt DESC, id DESC`;
+- `GET /api/admin/content/{id}`;
+- `POST /api/admin/content`;
+- `PATCH /api/admin/content/{id}`;
+- respuestas mediante DTOs administrativos controlados, sin exponer la entidad JPA;
+- todos los endpoints reutilizan la protección existente de `/api/admin/**`;
+- POST y PATCH mantienen CSRF obligatorio.
+
+Este foundation es backend-only. Frontend Admin, publicación pública de contenido,
+Newsletter, dashboard, analytics y uploads permanecen fuera de este bloque.
 
 La configuración productiva definitiva de CORS/cookies depende del dominio HTTPS
 final del frontend Admin y permanece pendiente.

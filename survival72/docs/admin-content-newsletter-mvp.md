@@ -4,9 +4,10 @@
 
 Define the minimum viable administrative system needed to give the Survival72 Join flow a real purpose before the planned presentation/event.
 
-This document defines architecture and contracts only.
+This document defines the MVP architecture and contracts.
 
-This branch must not implement production functionality.
+The Admin security, subscriber read model, and backend Content foundation are now
+implemented incrementally. Newsletter and the Admin frontend remain pending.
 
 The MVP must allow one authorized administrator to:
 
@@ -375,6 +376,34 @@ This metadata allows content to be categorized and reused by future newsletter o
 
 Content preference metadata does not itself trigger automatic delivery.
 
+### Implemented backend foundation
+
+The backend Content foundation now implements this model through:
+
+- `ContentItem`;
+- `ContentType` with `VIDEO` and `ARTICLE`;
+- `ContentStatus` with `DRAFT`, `PUBLISHED`, and `ARCHIVED`;
+- optional canonical `SubscriberPreference` values;
+- Flyway tables `content_item` and `content_item_preferences`;
+- controlled Admin DTOs rather than JPA entity serialization;
+- `GET /api/admin/content`;
+- `GET /api/admin/content/{id}`;
+- `POST /api/admin/content`;
+- `PATCH /api/admin/content/{id}`.
+
+The list endpoint uses database pagination with `page` default `0`, `size`
+default `20`, maximum `100`, optional `type` and `status` filters, and stable
+ordering by `createdAt DESC, id DESC`.
+
+Creating content defaults to `DRAFT` when status is omitted. Transitioning to
+`PUBLISHED` establishes `publishedAt` only when it has not previously been set.
+`ARCHIVED` preserves the record and its metadata; physical deletion is not part
+of the MVP.
+
+All Content Admin endpoints reuse the existing authenticated `/api/admin/**`
+Spring Security boundary. State-changing POST/PATCH requests remain protected
+by the existing CSRF configuration.
+
 ---
 
 ## 8. YouTube Model
@@ -396,7 +425,7 @@ The admin should be allowed to enter either:
 
 ### Persistence
 
-The backend should normalize valid YouTube input and store the canonical YouTube video ID.
+The backend normalizes valid YouTube input and stores only the canonical YouTube video ID.
 
 Example conceptual field:
 
@@ -420,10 +449,13 @@ A YouTube content item contains:
 
 ### Validation
 
-The backend must validate that:
+The implemented backend validates that:
 
-- a `VIDEO` has a valid YouTube video ID;
-- a non-video content item does not require a YouTube ID.
+- a `VIDEO` has a reasonably formatted canonical YouTube video ID;
+- direct 11-character IDs are accepted;
+- common `youtube.com/watch?v=...` and `youtu.be/...` inputs are normalized;
+- an `ARTICLE` rejects YouTube input and persists `youtubeVideoId` as `null`;
+- video existence is not checked online.
 
 ### Explicit exclusions
 

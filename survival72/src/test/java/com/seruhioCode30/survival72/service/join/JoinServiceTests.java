@@ -133,7 +133,12 @@ class JoinServiceTests {
 
         assertThat(result.outcome()).isEqualTo(JoinOutcome.ACTIVE_DUPLICATE);
         assertThat(result.managementToken()).isEmpty();
-        assertThat(subscriberRepository.count()).isEqualTo(1);
+        assertThat(
+                subscriberRepository
+                        .findByEmail("duplicate-active@example.com")
+                        .orElseThrow()
+                        .getId()
+        ).isEqualTo(originalId);
 
         assertThat(reloaded.getFirstName()).isEqualTo("Original");
         assertThat(reloaded.getCountryCode()).isEqualTo("CR");
@@ -178,7 +183,12 @@ class JoinServiceTests {
 
         assertThat(result.outcome()).isEqualTo(JoinOutcome.REJOINED);
         assertThat(reloaded.getId()).isEqualTo(originalId);
-        assertThat(subscriberRepository.count()).isEqualTo(1);
+        assertThat(
+                subscriberRepository
+                        .findByEmail("rejoin@example.com")
+                        .orElseThrow()
+                        .getId()
+        ).isEqualTo(originalId);
 
         assertThat(reloaded.getStatus()).isEqualTo(SubscriberStatus.ACTIVE);
         assertThat(reloaded.getFirstName()).isEqualTo("New Name");

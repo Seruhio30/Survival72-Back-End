@@ -11,8 +11,11 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 
+import java.lang.reflect.RecordComponent;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -57,6 +60,52 @@ class SubscriptionUnsubscribeServiceTests {
 
         assertThat(reloaded.getStatus())
                 .isEqualTo(SubscriberStatus.UNSUBSCRIBED);
+    }
+
+    @Test
+    void successfulUnsubscribeReturnsMinimalEmailConfirmationData() {
+        TokenFixture fixture = persistSubscriber(
+                "confirmation@example.com",
+                SubscriberStatus.ACTIVE
+        );
+
+        SubscriptionUnsubscribeResult result =
+                subscriptionUnsubscribeService.unsubscribe(
+                        fixture.rawToken()
+                );
+
+        assertThat(result.email())
+                .isEqualTo("confirmation@example.com");
+        assertThat(result.firstName())
+                .isEqualTo("Sergio");
+    }
+
+    @Test
+    void unsubscribeResultDoesNotExposeSensitiveOrPersistenceFields() {
+        Set<String> componentNames = Arrays.stream(
+                        SubscriptionUnsubscribeResult.class
+                                .getRecordComponents()
+                )
+                .map(RecordComponent::getName)
+                .collect(Collectors.toSet());
+
+        assertThat(componentNames)
+                .containsExactlyInAnyOrder(
+                        "email",
+                        "firstName"
+                )
+                .doesNotContain(
+                        "id",
+                        "token",
+                        "rawToken",
+                        "managementToken",
+                        "managementTokenHash",
+                        "status",
+                        "subscribedAt",
+                        "updatedAt",
+                        "unsubscribedAt",
+                        "preferences"
+                );
     }
 
     @Test

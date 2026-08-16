@@ -3,7 +3,7 @@ package com.seruhioCode30.survival72.controller.join;
 import com.seruhioCode30.survival72.controller.join.dto.JoinRequest;
 import com.seruhioCode30.survival72.controller.join.dto.JoinResponse;
 import com.seruhioCode30.survival72.service.join.JoinCommand;
-import com.seruhioCode30.survival72.service.join.JoinService;
+import com.seruhioCode30.survival72.service.join.JoinApplicationService;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,10 +21,10 @@ public class JoinController {
             "Join request processed."
     );
 
-    private final JoinService joinService;
+    private final JoinApplicationService joinApplicationService;
 
-    public JoinController(JoinService joinService) {
-        this.joinService = joinService;
+    public JoinController(JoinApplicationService joinApplicationService) {
+        this.joinApplicationService = joinApplicationService;
     }
 
     @PostMapping(
@@ -41,7 +41,7 @@ public class JoinController {
                 request.preferences()
         );
 
-        joinService.join(command);
+        joinApplicationService.join(command);
 
         return ResponseEntity.ok(ACCEPTED_RESPONSE);
     }

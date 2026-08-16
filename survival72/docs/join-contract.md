@@ -651,32 +651,95 @@ Persistence tests currently report 5 tests, 0 failures, 0 errors, and `BUILD SUC
 
 ## 19. Email Strategy
 
-### 19.1 Welcome email
+### 19.1 Architecture
 
-Send after:
+Email delivery is separated from subscription lifecycle persistence.
 
-- a successful new Join;
-- a successful Rejoin.
+The implemented flow uses:
 
-The email should contain:
+- `JoinService` for Join lifecycle and transaction ownership;
+- `SubscriptionUnsubscribeService` for unsubscribe lifecycle and transaction ownership;
+- `JoinApplicationService` to orchestrate Join followed by optional email delivery;
+- `SubscriptionUnsubscribeApplicationService` to orchestrate unsubscribe followed by confirmation email;
+- `SubscriptionEmailService` for message construction, frontend links, and Spring Mail transport.
 
-- optional greeting using `firstName`;
+The application services are not transactional. The lifecycle service completes its transaction before SMTP delivery is attempted.
+
+SMTP concerns are not placed inside `JoinService` or `SubscriptionUnsubscribeService`.
+
+### 19.2 Welcome email
+
+A welcome email is sent only after:
+
+- `NEW_SUBSCRIPTION`;
+- `REJOINED`.
+
+The raw management token is used only temporarily after `JoinService` returns it in `JoinResult`.
+
+The token:
+
+- is not persisted in raw form;
+- is not logged;
+- is not returned publicly;
+- is used only to construct the management and unsubscribe frontend links.
+
+`ACTIVE_DUPLICATE` does not receive a raw token, does not rotate the existing token, and does not send a welcome email automatically.
+
+The MVP welcome message remains intentionally simple and includes:
+
 - confirmation that the subscription is active;
-- a short explanation of Survival72;
+- a short Survival72 welcome;
 - a management link;
 - an unsubscribe link.
 
-### 19.2 Unsubscribe confirmation
+### 19.3 Frontend links
 
-The MVP should send a short confirmation after successful unsubscribe.
+The configured frontend base URL is provided through:
 
-The message confirms that communications have been stopped.
+`app.frontend.base-url=${FRONTEND_BASE_URL:http://localhost:5500}`
 
-It may provide a normal link back to the public Join experience for future rejoining.
+The local fallback is for development only. Production must provide `FRONTEND_BASE_URL`; no production domain is invented by the backend.
 
-It must not reactivate the subscription automatically.
+Management links use URL fragments:
 
-### 19.3 No double opt-in in MVP
+- `<frontend-base-url>/manage#token=<token>`
+- `<frontend-base-url>/unsubscribe#token=<token>`
+
+Rules:
+
+- token is never placed in the query string;
+- email is never included in the URL;
+- opening the unsubscribe frontend link does not directly mutate backend state;
+- the frontend must later send the raw token to the API using the Bearer authorization header.
+
+### 19.4 Unsubscribe confirmation
+
+After successful unsubscribe, the lifecycle service returns only the minimal internal data required for email confirmation.
+
+The confirmation email:
+
+- is sent after the unsubscribe transaction completes;
+- does not require a management token;
+- does not reactivate the subscription;
+- does not include a management or unsubscribe token link.
+
+### 19.5 Mail configuration
+
+The historical custom `MailConfig` with hardcoded SMTP credentials is not used by the new flow.
+
+Spring Boot configures `JavaMailSender` from properties/environment.
+
+Relevant configuration:
+
+- `MAIL_USERNAME`;
+- `MAIL_PASSWORD`;
+- `MAIL_FROM`.
+
+No new SMTP credentials are hardcoded or committed.
+
+Historical credentials remain a separate security risk and still require explicit rotation outside this block.
+
+### 19.6 No double opt-in in MVP
 
 A confirmation-before-activation workflow is outside the initial MVP.
 
@@ -684,19 +747,23 @@ Successful Join activates the subscription directly.
 
 The MVP therefore does not introduce a `PENDING` status.
 
-### 19.4 Email failure
+### 19.7 Email failure
 
-Database state must not be rolled back solely because email delivery fails.
+Database state is not rolled back solely because email delivery fails.
 
-Conceptual flow: validate -> persist database transaction -> attempt email delivery.
+Implemented flow:
 
-If email delivery fails:
+`validate -> persist lifecycle transaction -> return -> attempt email delivery`
+
+If Spring Mail fails:
 
 - the subscriber state remains persisted;
-- the failure is handled internally;
-- sensitive data and raw management tokens are not logged unnecessarily.
+- the SMTP failure is caught by the application orchestration layer;
+- the public Join/unsubscribe request remains successful once lifecycle persistence completed;
+- raw management tokens, passwords, and recipient data are not included in the warning log;
+- no SMTP stacktrace or sensitive internal detail is exposed to the API caller.
 
-Persistent queues, transactional outbox patterns, and advanced retry systems are outside MVP scope.
+Persistent queues, transactional outbox patterns, brokers, schedulers, and advanced retry systems remain outside MVP scope.
 
 ## 20. Error Contract
 
@@ -1081,14 +1148,32 @@ Implemented:
 
 ### Stage 6 — Email integration
 
-Implement:
+Implemented:
 
-- welcome email;
-- management link;
-- unsubscribe link;
-- unsubscribe confirmation;
-- safe email failure behavior;
-- environment-based frontend URL.
+- `SubscriptionEmailService`;
+- `JoinApplicationService`;
+- `SubscriptionUnsubscribeApplicationService`;
+- welcome email for `NEW_SUBSCRIPTION` and `REJOINED`;
+- no welcome email for `ACTIVE_DUPLICATE`;
+- management link using `/manage#token=<token>`;
+- unsubscribe link using `/unsubscribe#token=<token>`;
+- unsubscribe confirmation without a management token;
+- `FRONTEND_BASE_URL` through `app.frontend.base-url`;
+- `MAIL_USERNAME`, `MAIL_PASSWORD`, and `MAIL_FROM` environment configuration;
+- Spring Boot-managed `JavaMailSender`;
+- SMTP failure handling after lifecycle persistence;
+- integration tests proving SMTP failure does not roll back Join or unsubscribe.
+
+Still outside this stage:
+
+- frontend implementation;
+- production frontend domain selection;
+- email retry queue/outbox;
+- newsletter redesign;
+- automation/scheduling;
+- admin;
+- legacy cleanup;
+- global historical secret rotation.
 
 ### Stage 7 — Tests and hardening
 

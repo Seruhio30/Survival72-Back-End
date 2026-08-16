@@ -90,8 +90,8 @@ Incluye:
 - configuración SMTP sensible se externaliza mediante `MAIL_USERNAME`,
   `MAIL_PASSWORD` y `MAIL_FROM`;
 - `MailConfig` histórico con credenciales hardcodeadas fue eliminado;
-- frontend, admin, newsletter nuevo, retry avanzado/outbox y legacy cleanup
-  siguen pendientes.
+- frontend Admin, subscriber admin, Content, Newsletter nuevo,
+  retry avanzado/outbox y legacy cleanup siguen pendientes.
 
 Validación dirigida del bloque de email:
 
@@ -122,3 +122,47 @@ En el entorno validado durante este bloque, el host fue `192.168.16.1`.
 La contraseña nunca debe incluirse en Git, documentación ni logs.
 
 El contrato detallado se encuentra en `survival72/docs/join-contract.md`.
+
+## Admin security foundation
+
+La seguridad base del nuevo Admin está implementada en backend.
+
+Incluye:
+
+- Spring Security como frontera de autenticación y autorización;
+- un único administrador para el MVP;
+- username configurado mediante `ADMIN_USERNAME`;
+- password verificado exclusivamente contra un hash BCrypt configurado mediante
+  `ADMIN_PASSWORD_HASH`;
+- ninguna credencial administrativa nueva ni password hash sensible se almacena
+  en Git;
+- autenticación basada en sesión HTTP, sin JWT;
+- protección de `/api/admin/**` mediante autenticación backend;
+- `POST /api/admin/auth/login` para establecer la sesión administrativa;
+- `GET /api/admin/auth/session` para consultar el estado autenticado y obtener el
+  token CSRF requerido por el futuro frontend Admin;
+- `POST /api/admin/auth/logout` para invalidar la sesión;
+- protección contra session fixation mediante cambio del session ID después de
+  autenticación válida;
+- CSRF habilitado para mutaciones administrativas mediante
+  `HttpSessionCsrfTokenRepository`;
+- Join, Management y Unsubscribe conservan sus contratos públicos existentes y
+  no requieren sesión administrativa;
+- CORS local continúa limitado a `http://localhost:5500` y
+  `http://127.0.0.1:5500`, con credentials habilitadas;
+- cookie de sesión con `HttpOnly=true`;
+- `SameSite` configurable mediante `SESSION_COOKIE_SAME_SITE`, con `lax` como
+  fallback local;
+- atributo `Secure` configurable mediante `SESSION_COOKIE_SECURE`, con `false`
+  como fallback local; producción HTTPS deberá configurarlo como `true`;
+- endpoint técnico `/api/admin/security-check` limitado a este foundation para
+  validar autorización y CSRF; no constituye un dashboard;
+- no se implementaron Content, Newsletter, subscriber admin UI, dashboard visual
+  ni analytics.
+
+La configuración productiva definitiva de CORS/cookies depende del dominio HTTPS
+final del frontend Admin y permanece pendiente.
+
+La credencial histórica de base de datos que todavía existe en
+`application.properties` continúa siendo un riesgo conocido y debe rotarse y
+externalizarse en un bloque de seguridad separado antes de producción.

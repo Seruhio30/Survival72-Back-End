@@ -1254,3 +1254,64 @@ Newsletter preparation is independent of the eventual email delivery provider.
 The final send action is manual and provider-backed.
 
 Automation, queues, retries and scheduling remain future work.
+
+---
+
+## 24. Admin Security Foundation — Implementation Status
+
+Implemented on branch:
+
+`feat/admin-security-foundation`
+
+The backend security boundary defined in Block 1 is now implemented.
+
+Implemented:
+
+- Spring Security dependency and Spring Security test support;
+- one externally configured administrator;
+- `ADMIN_USERNAME` as the external username source;
+- `ADMIN_PASSWORD_HASH` as the external BCrypt password-hash source;
+- no new plaintext administrator password or committed secret hash;
+- backend authorization for `/api/admin/**`;
+- HTTP session authentication without JWT;
+- `POST /api/admin/auth/login`;
+- `GET /api/admin/auth/session`;
+- `POST /api/admin/auth/logout`;
+- explicit persistence of the authenticated Spring Security context;
+- session fixation protection by changing the session ID after successful login;
+- explicit session invalidation on logout;
+- CSRF enabled for authenticated administrative mutations;
+- CSRF token storage through `HttpSessionCsrfTokenRepository`;
+- the session endpoint exposes the current CSRF token and header name required by
+  the future Admin frontend;
+- controlled neutral responses for invalid administrator credentials;
+- controlled unauthenticated response for protected Admin routes;
+- local CORS remains limited to the existing explicit localhost frontend origins
+  with credentials enabled;
+- session cookie `HttpOnly=true`;
+- configurable `SameSite` through `SESSION_COOKIE_SAME_SITE`, defaulting to
+  `lax` for local development;
+- configurable session-cookie `Secure` through `SESSION_COOKIE_SECURE`,
+  defaulting to `false` locally and requiring `true` for HTTPS production;
+- the existing public Join, Management and Unsubscribe contracts remain outside
+  Admin session authentication;
+- a minimal `/api/admin/security-check` probe exists only to validate protected
+  read/mutation behavior and CSRF at this foundation stage;
+- dedicated Admin security tests cover authentication, session, logout,
+  protected routes, CSRF and preservation of public subscription boundaries.
+
+Explicitly not implemented in this block:
+
+- Content;
+- Videos;
+- Newsletter;
+- subscriber Admin UI;
+- dashboard UI or operational dashboard API;
+- analytics;
+- automation;
+- general legacy cleanup;
+- production CORS domain configuration;
+- Admin frontend.
+
+The historical database credential already documented as exposed remains outside
+this block and must still be rotated and externalized before production.

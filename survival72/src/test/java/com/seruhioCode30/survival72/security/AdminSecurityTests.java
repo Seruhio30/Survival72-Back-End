@@ -5,6 +5,10 @@ import com.seruhioCode30.survival72.config.properties.AdminSecurityProperties;
 import com.seruhioCode30.survival72.controller.admin.AdminSecurityProbeController;
 import com.seruhioCode30.survival72.controller.admin.auth.AdminAuthController;
 import com.seruhioCode30.survival72.controller.admin.auth.AdminAuthExceptionHandler;
+import com.seruhioCode30.survival72.controller.admin.subscriber.AdminSubscriberController;
+import com.seruhioCode30.survival72.controller.admin.subscriber.AdminSubscriberExceptionHandler;
+import com.seruhioCode30.survival72.controller.admin.subscriber.dto.AdminSubscriberPageResponse;
+import com.seruhioCode30.survival72.service.admin.subscriber.AdminSubscriberService;
 import com.seruhioCode30.survival72.controller.join.JoinController;
 import com.seruhioCode30.survival72.controller.subscription.SubscriptionManagementController;
 import com.seruhioCode30.survival72.controller.subscription.SubscriptionUnsubscribeController;
@@ -51,11 +55,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         AdminSecurityProbeController.class,
         JoinController.class,
         SubscriptionManagementController.class,
-        SubscriptionUnsubscribeController.class
+        SubscriptionUnsubscribeController.class,
+        AdminSubscriberController.class
 })
 @Import({
         SecurityConfig.class,
-        AdminAuthExceptionHandler.class
+        AdminAuthExceptionHandler.class,
+        AdminSubscriberExceptionHandler.class
 })
 @EnableConfigurationProperties(AdminSecurityProperties.class)
 class AdminSecurityTests {
@@ -76,6 +82,9 @@ class AdminSecurityTests {
     @MockBean
     private SubscriptionUnsubscribeApplicationService unsubscribeApplicationService;
 
+    @MockBean
+    private AdminSubscriberService adminSubscriberService;
+
     @DynamicPropertySource
     static void adminProperties(DynamicPropertyRegistry registry) {
         registry.add("app.admin.username", () -> ADMIN_USERNAME);
@@ -83,6 +92,27 @@ class AdminSecurityTests {
                 "app.admin.password-hash",
                 () -> new BCryptPasswordEncoder().encode(ADMIN_PASSWORD)
         );
+    }
+
+    @Test
+    void authenticatedAdminSessionCanReadSubscribers() throws Exception {
+        MockHttpSession session = authenticatedSession();
+
+        when(adminSubscriberService.findSubscribers(0, 20, null, null))
+                .thenReturn(new AdminSubscriberPageResponse(
+                        java.util.List.of(),
+                        0,
+                        20,
+                        0,
+                        0,
+                        false
+                ));
+
+        mockMvc.perform(get("/api/admin/subscribers")
+                        .session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20));
     }
 
     @Test

@@ -73,13 +73,52 @@ Incluye:
 - éxito devuelve `200 OK` con respuesta pública neutral `UNSUBSCRIBED`;
 - acceso inválido, desconocido, revocado o no gestionable devuelve `404 Not Found`
   neutral con código `SUBSCRIPTION_ACCESS_NOT_FOUND`;
-- email, frontend y admin siguen pendientes.
+- integración base de email implementada mediante `JoinApplicationService`,
+  `SubscriptionUnsubscribeApplicationService` y `SubscriptionEmailService`;
+- `NEW_SUBSCRIPTION` y `REJOINED` envían welcome email usando el raw management
+  token únicamente de forma temporal para construir links;
+- `ACTIVE_DUPLICATE` no rota token y no envía welcome email;
+- los links de gestión usan frontend URL + fragmento:
+  `/manage#token=<token>` y `/unsubscribe#token=<token>`;
+- email nunca aparece en las URLs y el token no se envía como query parameter;
+- unsubscribe confirmation se envía después del lifecycle y no necesita
+  management token;
+- fallos SMTP se manejan después de completar el lifecycle persistido y no
+  provocan rollback de Join ni unsubscribe;
+- `app.frontend.base-url` usa `FRONTEND_BASE_URL`, con
+  `http://localhost:5500` como fallback de desarrollo;
+- configuración SMTP sensible se externaliza mediante `MAIL_USERNAME`,
+  `MAIL_PASSWORD` y `MAIL_FROM`;
+- `MailConfig` histórico con credenciales hardcodeadas fue eliminado;
+- frontend, admin, newsletter nuevo, retry avanzado/outbox y legacy cleanup
+  siguen pendientes.
 
-Validación actual completa:
+Validación dirigida del bloque de email:
 
-- 92 pruebas;
+- 66 pruebas;
 - 0 fallos;
 - 0 errores;
-- `BUILD SUCCESS`.
+- `BUILD SUCCESS`;
+- incluye tests unitarios de email/orquestación, controllers, JoinService,
+  unsubscribe y 2 pruebas de integración con MySQL real que verifican que un
+  fallo SMTP no revierte el lifecycle persistido.
+
+### Tests desde WSL contra MySQL en Windows
+
+`application.properties` continúa apuntando a `localhost/root`, por lo que los
+tests de integración desde WSL requieren usar el MySQL de Windows mediante la
+IP del host.
+
+Procedimiento recurrente:
+
+1. Obtener la IP de Windows desde WSL con `ip route`.
+2. Verificar que MySQL responde en el puerto `3306`.
+3. Exportar localmente `SPRING_DATASOURCE_USERNAME=survival72_dev`.
+4. Cargar `SPRING_DATASOURCE_PASSWORD` de forma oculta y sin versionarla.
+5. Ejecutar Maven pasando
+   `-Dspring.datasource.url=jdbc:mysql://<windows-host>:3306/survival72_db`.
+
+En el entorno validado durante este bloque, el host fue `192.168.16.1`.
+La contraseña nunca debe incluirse en Git, documentación ni logs.
 
 El contrato detallado se encuentra en `survival72/docs/join-contract.md`.

@@ -24,7 +24,7 @@ public class SubscriptionUnsubscribeService {
     }
 
     @Transactional
-    public void unsubscribe(String rawToken) {
+    public SubscriptionUnsubscribeResult unsubscribe(String rawToken) {
         String tokenHash;
 
         try {
@@ -53,5 +53,10 @@ public class SubscriptionUnsubscribeService {
         subscriber.setManagementTokenHash(null);
 
         subscriberRepository.save(subscriber);
+
+        return new SubscriptionUnsubscribeResult(
+                subscriber.getEmail(),
+                subscriber.getFirstName()
+        );
     }
 }

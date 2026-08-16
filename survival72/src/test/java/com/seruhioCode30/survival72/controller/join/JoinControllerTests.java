@@ -4,7 +4,7 @@ import com.seruhioCode30.survival72.model.SubscriberPreference;
 import com.seruhioCode30.survival72.service.join.JoinCommand;
 import com.seruhioCode30.survival72.service.join.JoinOutcome;
 import com.seruhioCode30.survival72.service.join.JoinResult;
-import com.seruhioCode30.survival72.service.join.JoinService;
+import com.seruhioCode30.survival72.service.join.JoinApplicationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -37,11 +37,11 @@ class JoinControllerTests {
     private MockMvc mockMvc;
 
     @MockBean
-    private JoinService joinService;
+    private JoinApplicationService joinApplicationService;
 
     @Test
     void validRequestReturnsNeutralAcceptedResponse() throws Exception {
-        when(joinService.join(any())).thenReturn(
+        when(joinApplicationService.join(any())).thenReturn(
                 new JoinResult(JoinOutcome.NEW_SUBSCRIPTION, "raw-token")
         );
 
@@ -53,12 +53,12 @@ class JoinControllerTests {
                 .andExpect(jsonPath("$.status").value("REQUEST_ACCEPTED"))
                 .andExpect(jsonPath("$.message").value("Join request processed."));
 
-        verify(joinService).join(any());
+        verify(joinApplicationService).join(any());
     }
 
     @Test
     void validRequestMapsPublicDtoToJoinCommand() throws Exception {
-        when(joinService.join(any())).thenReturn(
+        when(joinApplicationService.join(any())).thenReturn(
                 new JoinResult(JoinOutcome.NEW_SUBSCRIPTION, "raw-token")
         );
 
@@ -68,7 +68,7 @@ class JoinControllerTests {
                 .andExpect(status().isOk());
 
         var captor = org.mockito.ArgumentCaptor.forClass(JoinCommand.class);
-        verify(joinService).join(captor.capture());
+        verify(joinApplicationService).join(captor.capture());
 
         JoinCommand command = captor.getValue();
 
@@ -173,7 +173,7 @@ class JoinControllerTests {
 
     @Test
     void serviceContractRejectionReturnsControlledBadRequest() throws Exception {
-        when(joinService.join(any())).thenThrow(
+        when(joinApplicationService.join(any())).thenThrow(
                 new IllegalArgumentException("internal validation detail")
         );
 
@@ -187,7 +187,7 @@ class JoinControllerTests {
 
     @Test
     void firstNameIsOptional() throws Exception {
-        when(joinService.join(any())).thenReturn(
+        when(joinApplicationService.join(any())).thenReturn(
                 new JoinResult(JoinOutcome.NEW_SUBSCRIPTION, "raw-token")
         );
 
@@ -206,7 +206,7 @@ class JoinControllerTests {
 
     @Test
     void responseDoesNotExposeInternalJoinData() throws Exception {
-        when(joinService.join(any())).thenReturn(
+        when(joinApplicationService.join(any())).thenReturn(
                 new JoinResult(JoinOutcome.REJOINED, "super-secret-raw-token")
         );
 
@@ -226,7 +226,7 @@ class JoinControllerTests {
     }
 
     private void assertNeutralResponse(JoinResult result) throws Exception {
-        when(joinService.join(any())).thenReturn(result);
+        when(joinApplicationService.join(any())).thenReturn(result);
 
         mockMvc.perform(post("/api/join")
                         .contentType(MediaType.APPLICATION_JSON)

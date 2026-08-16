@@ -2,7 +2,7 @@ package com.seruhioCode30.survival72.controller.subscription;
 
 import com.seruhioCode30.survival72.controller.subscription.dto.SubscriptionUnsubscribeResponse;
 import com.seruhioCode30.survival72.service.subscription.SubscriptionAccessException;
-import com.seruhioCode30.survival72.service.subscription.SubscriptionUnsubscribeService;
+import com.seruhioCode30.survival72.service.subscription.SubscriptionUnsubscribeApplicationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -35,7 +35,7 @@ class SubscriptionUnsubscribeControllerTests {
     private MockMvc mockMvc;
 
     @MockBean
-    private SubscriptionUnsubscribeService subscriptionUnsubscribeService;
+    private SubscriptionUnsubscribeApplicationService unsubscribeApplicationService;
 
     @Test
     void validBearerTokenReturnsUnsubscribed() throws Exception {
@@ -62,7 +62,7 @@ class SubscriptionUnsubscribeControllerTests {
                         ))
                 .andExpect(status().isOk());
 
-        verify(subscriptionUnsubscribeService)
+        verify(unsubscribeApplicationService)
                 .unsubscribe(VALID_TOKEN);
     }
 
@@ -124,7 +124,7 @@ class SubscriptionUnsubscribeControllerTests {
     @Test
     void invalidTokenReturnsNeutralNotFound() throws Exception {
         doThrow(new SubscriptionAccessException())
-                .when(subscriptionUnsubscribeService)
+                .when(unsubscribeApplicationService)
                 .unsubscribe("invalid-token");
 
         mockMvc.perform(post("/api/subscriptions/unsubscribe")
@@ -144,7 +144,7 @@ class SubscriptionUnsubscribeControllerTests {
     @Test
     void revokedTokenReturnsSameNeutralNotFound() throws Exception {
         doThrow(new SubscriptionAccessException())
-                .when(subscriptionUnsubscribeService)
+                .when(unsubscribeApplicationService)
                 .unsubscribe("revoked-token");
 
         mockMvc.perform(post("/api/subscriptions/unsubscribe")
@@ -164,7 +164,7 @@ class SubscriptionUnsubscribeControllerTests {
     @Test
     void nonActiveSubscriberReturnsSameNeutralNotFound() throws Exception {
         doThrow(new SubscriptionAccessException())
-                .when(subscriptionUnsubscribeService)
+                .when(unsubscribeApplicationService)
                 .unsubscribe("non-active-token");
 
         mockMvc.perform(post("/api/subscriptions/unsubscribe")
@@ -216,7 +216,7 @@ class SubscriptionUnsubscribeControllerTests {
                 .andExpect(jsonPath("$.code")
                         .value("SUBSCRIPTION_ACCESS_NOT_FOUND"));
 
-        verify(subscriptionUnsubscribeService, never())
+        verify(unsubscribeApplicationService, never())
                 .unsubscribe("user@example.com");
     }
 
@@ -228,7 +228,7 @@ class SubscriptionUnsubscribeControllerTests {
                 .andExpect(jsonPath("$.code")
                         .value("SUBSCRIPTION_ACCESS_NOT_FOUND"));
 
-        verify(subscriptionUnsubscribeService, never())
+        verify(unsubscribeApplicationService, never())
                 .unsubscribe(VALID_TOKEN);
     }
 
@@ -241,7 +241,7 @@ class SubscriptionUnsubscribeControllerTests {
                         ))
                 .andExpect(status().isMethodNotAllowed());
 
-        verify(subscriptionUnsubscribeService, never())
+        verify(unsubscribeApplicationService, never())
                 .unsubscribe(VALID_TOKEN);
     }
 }

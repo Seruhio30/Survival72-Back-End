@@ -2,7 +2,7 @@ package com.seruhioCode30.survival72.controller.subscription;
 
 import com.seruhioCode30.survival72.controller.subscription.dto.SubscriptionUnsubscribeResponse;
 import com.seruhioCode30.survival72.service.subscription.SubscriptionAccessException;
-import com.seruhioCode30.survival72.service.subscription.SubscriptionUnsubscribeService;
+import com.seruhioCode30.survival72.service.subscription.SubscriptionUnsubscribeApplicationService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,12 +17,12 @@ public class SubscriptionUnsubscribeController {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private final SubscriptionUnsubscribeService subscriptionUnsubscribeService;
+    private final SubscriptionUnsubscribeApplicationService unsubscribeApplicationService;
 
     public SubscriptionUnsubscribeController(
-            SubscriptionUnsubscribeService subscriptionUnsubscribeService
+            SubscriptionUnsubscribeApplicationService unsubscribeApplicationService
     ) {
-        this.subscriptionUnsubscribeService = subscriptionUnsubscribeService;
+        this.unsubscribeApplicationService = unsubscribeApplicationService;
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -34,7 +34,7 @@ public class SubscriptionUnsubscribeController {
     ) {
         String rawToken = extractBearerToken(authorizationHeader);
 
-        subscriptionUnsubscribeService.unsubscribe(rawToken);
+        unsubscribeApplicationService.unsubscribe(rawToken);
 
         return ResponseEntity.ok(
                 new SubscriptionUnsubscribeResponse(

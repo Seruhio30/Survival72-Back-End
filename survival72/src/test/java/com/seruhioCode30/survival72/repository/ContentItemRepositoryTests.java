@@ -33,7 +33,7 @@ class ContentItemRepositoryTests {
         );
         item.setPreferences(Set.of(
                 SubscriberPreference.GENERAL_PREPAREDNESS,
-                SubscriberPreference.EDUCATIONAL_CONTENT
+                SubscriberPreference.PRACTICAL_SKILLS
         ));
 
         ContentItem saved = contentItemRepository.saveAndFlush(item);
@@ -46,7 +46,7 @@ class ContentItemRepositoryTests {
         assertThat(reloaded.getStatus()).isEqualTo(ContentStatus.DRAFT);
         assertThat(reloaded.getPreferences()).containsExactlyInAnyOrder(
                 SubscriberPreference.GENERAL_PREPAREDNESS,
-                SubscriberPreference.EDUCATIONAL_CONTENT
+                SubscriberPreference.PRACTICAL_SKILLS
         );
     }
 

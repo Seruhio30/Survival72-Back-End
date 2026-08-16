@@ -158,6 +158,76 @@ class JoinControllerTests {
     }
 
     @Test
+    void practicalSkillsPreferenceIsAccepted() throws Exception {
+        when(joinApplicationService.join(any())).thenReturn(
+                new JoinResult(JoinOutcome.NEW_SUBSCRIPTION, "raw-token")
+        );
+
+        mockMvc.perform(post("/api/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "sergio@example.com",
+                                  "countryCode": "CR",
+                                  "preferences": ["PRACTICAL_SKILLS"]
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        var captor = org.mockito.ArgumentCaptor.forClass(JoinCommand.class);
+        verify(joinApplicationService).join(captor.capture());
+
+        assertThat(captor.getValue().preferences())
+                .containsExactly(SubscriberPreference.PRACTICAL_SKILLS);
+    }
+
+    @Test
+    void eventsAndUpdatesPreferenceIsAccepted() throws Exception {
+        when(joinApplicationService.join(any())).thenReturn(
+                new JoinResult(JoinOutcome.NEW_SUBSCRIPTION, "raw-token")
+        );
+
+        mockMvc.perform(post("/api/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "sergio@example.com",
+                                  "countryCode": "CR",
+                                  "preferences": ["EVENTS_AND_UPDATES"]
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        var captor = org.mockito.ArgumentCaptor.forClass(JoinCommand.class);
+        verify(joinApplicationService).join(captor.capture());
+
+        assertThat(captor.getValue().preferences())
+                .containsExactly(SubscriberPreference.EVENTS_AND_UPDATES);
+    }
+
+    @Test
+    void legacyPreferenceValuesReturnControlledBadRequest() throws Exception {
+        for (String legacyPreference : new String[]{
+                "EDUCATIONAL_CONTENT",
+                "EVENTS_AND_TRAINING"
+        }) {
+            mockMvc.perform(post("/api/join")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "email": "sergio@example.com",
+                                      "countryCode": "CR",
+                                      "preferences": ["%s"]
+                                    }
+                                    """.formatted(legacyPreference)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.status").value("BAD_REQUEST"))
+                    .andExpect(jsonPath("$.message")
+                            .value("Invalid join request."));
+        }
+    }
+
+    @Test
     void invalidPreferenceReturnsControlledBadRequest() throws Exception {
         mockMvc.perform(post("/api/join")
                         .contentType(MediaType.APPLICATION_JSON)

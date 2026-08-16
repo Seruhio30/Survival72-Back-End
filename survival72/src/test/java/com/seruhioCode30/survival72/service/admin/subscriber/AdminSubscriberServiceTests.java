@@ -138,7 +138,7 @@ class AdminSubscriberServiceTests {
 
         when(subscriberRepository.findByStatusAndPreference(
                 eq(SubscriberStatus.ACTIVE),
-                eq(SubscriberPreference.EDUCATIONAL_CONTENT),
+                eq(SubscriberPreference.PRACTICAL_SKILLS),
                 org.mockito.ArgumentMatchers.any(Pageable.class)
         )).thenAnswer(invocation -> new PageImpl<>(
                 List.of(),
@@ -150,12 +150,12 @@ class AdminSubscriberServiceTests {
                 0,
                 20,
                 "ACTIVE",
-                "EDUCATIONAL_CONTENT"
+                "PRACTICAL_SKILLS"
         );
 
         verify(subscriberRepository).findByStatusAndPreference(
                 eq(SubscriberStatus.ACTIVE),
-                eq(SubscriberPreference.EDUCATIONAL_CONTENT),
+                eq(SubscriberPreference.PRACTICAL_SKILLS),
                 org.mockito.ArgumentMatchers.any(Pageable.class)
         );
     }

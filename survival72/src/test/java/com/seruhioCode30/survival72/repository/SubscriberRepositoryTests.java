@@ -47,7 +47,7 @@ class SubscriberRepositoryTests {
         subscriber.setPreferences(Set.of(
                 SubscriberPreference.GENERAL_PREPAREDNESS,
                 SubscriberPreference.EMERGENCY_KIT,
-                SubscriberPreference.EDUCATIONAL_CONTENT
+                SubscriberPreference.PRACTICAL_SKILLS
         ));
 
         Subscriber saved = subscriberRepository.saveAndFlush(subscriber);
@@ -58,7 +58,7 @@ class SubscriberRepositoryTests {
                 .containsExactlyInAnyOrder(
                         SubscriberPreference.GENERAL_PREPAREDNESS,
                         SubscriberPreference.EMERGENCY_KIT,
-                        SubscriberPreference.EDUCATIONAL_CONTENT
+                        SubscriberPreference.PRACTICAL_SKILLS
                 );
     }
 
@@ -162,7 +162,7 @@ class SubscriberRepositoryTests {
         Subscriber subscriber = createSubscriber("preference-filter@example.com");
         subscriber.setPreferences(Set.of(
                 SubscriberPreference.EMERGENCY_KIT,
-                SubscriberPreference.EDUCATIONAL_CONTENT
+                SubscriberPreference.PRACTICAL_SKILLS
         ));
 
         subscriberRepository.saveAndFlush(subscriber);
@@ -181,12 +181,12 @@ class SubscriberRepositoryTests {
     void findsSubscribersByStatusAndPreference() {
         Subscriber matching = createSubscriber("combined-match@example.com");
         matching.setStatus(SubscriberStatus.ACTIVE);
-        matching.setPreferences(Set.of(SubscriberPreference.EDUCATIONAL_CONTENT));
+        matching.setPreferences(Set.of(SubscriberPreference.PRACTICAL_SKILLS));
 
         Subscriber wrongStatus = createSubscriber("combined-wrong-status@example.com");
         wrongStatus.setStatus(SubscriberStatus.UNSUBSCRIBED);
         wrongStatus.setUnsubscribedAt(LocalDateTime.now());
-        wrongStatus.setPreferences(Set.of(SubscriberPreference.EDUCATIONAL_CONTENT));
+        wrongStatus.setPreferences(Set.of(SubscriberPreference.PRACTICAL_SKILLS));
 
         Subscriber wrongPreference = createSubscriber("combined-wrong-preference@example.com");
         wrongPreference.setStatus(SubscriberStatus.ACTIVE);
@@ -198,7 +198,7 @@ class SubscriberRepositoryTests {
 
         var page = subscriberRepository.findByStatusAndPreference(
                 SubscriberStatus.ACTIVE,
-                SubscriberPreference.EDUCATIONAL_CONTENT,
+                SubscriberPreference.PRACTICAL_SKILLS,
                 org.springframework.data.domain.PageRequest.of(0, 20)
         );
 

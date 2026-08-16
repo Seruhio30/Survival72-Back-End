@@ -294,7 +294,7 @@ class AdminSecurityTests {
                 new SubscriptionManagementView(
                         "Updated",
                         "CR",
-                        Set.of(SubscriberPreference.EDUCATIONAL_CONTENT)
+                        Set.of(SubscriberPreference.PRACTICAL_SKILLS)
                 )
         );
 
@@ -308,7 +308,7 @@ class AdminSecurityTests {
                                 {
                                   "firstName": "Updated",
                                   "countryCode": "CR",
-                                  "preferences": ["EDUCATIONAL_CONTENT"]
+                                  "preferences": ["PRACTICAL_SKILLS"]
                                 }
                                 """))
                 .andExpect(status().isOk())

@@ -55,7 +55,7 @@ class SubscriptionManagementControllerTests {
               "countryCode": "CR",
               "preferences": [
                 "GENERAL_PREPAREDNESS",
-                "EDUCATIONAL_CONTENT"
+                "PRACTICAL_SKILLS"
               ]
             }
             """;
@@ -220,7 +220,7 @@ class SubscriptionManagementControllerTests {
                 new SubscriptionManagementView(
                         "Updated",
                         "US",
-                        Set.of(SubscriberPreference.EDUCATIONAL_CONTENT)
+                        Set.of(SubscriberPreference.PRACTICAL_SKILLS)
                 );
 
         when(subscriptionManagementService.updateSubscription(
@@ -239,7 +239,7 @@ class SubscriptionManagementControllerTests {
                 .andExpect(jsonPath("$.firstName").value("Updated"))
                 .andExpect(jsonPath("$.countryCode").value("US"))
                 .andExpect(jsonPath("$.preferences[0]")
-                        .value("EDUCATIONAL_CONTENT"));
+                        .value("PRACTICAL_SKILLS"));
     }
 
     @Test
@@ -273,7 +273,7 @@ class SubscriptionManagementControllerTests {
         assertThat(command.preferences())
                 .containsExactlyInAnyOrder(
                         SubscriberPreference.GENERAL_PREPAREDNESS,
-                        SubscriberPreference.EDUCATIONAL_CONTENT
+                        SubscriberPreference.PRACTICAL_SKILLS
                 );
     }
 
@@ -385,6 +385,68 @@ class SubscriptionManagementControllerTests {
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("BAD_REQUEST"));
+    }
+
+    @Test
+    void eventsAndUpdatesPreferenceIsAcceptedForPatch() throws Exception {
+        when(subscriptionManagementService.updateSubscription(
+                anyString(),
+                any(UpdateSubscriptionCommand.class)
+        )).thenReturn(
+                new SubscriptionManagementView(
+                        "Sergio",
+                        "CR",
+                        Set.of(SubscriberPreference.EVENTS_AND_UPDATES)
+                )
+        );
+
+        mockMvc.perform(patch("/api/subscriptions/manage")
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer " + VALID_TOKEN
+                        )
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName": "Sergio",
+                                  "countryCode": "CR",
+                                  "preferences": [
+                                    "EVENTS_AND_UPDATES"
+                                  ]
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.preferences[0]")
+                        .value("EVENTS_AND_UPDATES"));
+    }
+
+    @Test
+    void legacyPreferenceValuesReturnControlledBadRequestForPatch()
+            throws Exception {
+        for (String legacyPreference : new String[]{
+                "EDUCATIONAL_CONTENT",
+                "EVENTS_AND_TRAINING"
+        }) {
+            mockMvc.perform(patch("/api/subscriptions/manage")
+                            .header(
+                                    HttpHeaders.AUTHORIZATION,
+                                    "Bearer " + VALID_TOKEN
+                            )
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "firstName": "Sergio",
+                                      "countryCode": "CR",
+                                      "preferences": ["%s"]
+                                    }
+                                    """.formatted(legacyPreference)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("BAD_REQUEST"))
+                    .andExpect(jsonPath("$.message")
+                            .value(
+                                    "Invalid subscription management request."
+                            ));
+        }
     }
 
     @Test

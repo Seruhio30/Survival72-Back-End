@@ -89,7 +89,7 @@ class JoinServiceTests {
                 "token-new@example.com",
                 "Test",
                 "CR",
-                Set.of(SubscriberPreference.EDUCATIONAL_CONTENT)
+                Set.of(SubscriberPreference.PRACTICAL_SKILLS)
         ));
 
         Subscriber saved = subscriberRepository
@@ -125,7 +125,7 @@ class JoinServiceTests {
                 " DUPLICATE-ACTIVE@example.com ",
                 "Changed",
                 "US",
-                Set.of(SubscriberPreference.EVENTS_AND_TRAINING)
+                Set.of(SubscriberPreference.EVENTS_AND_UPDATES)
         ));
 
         subscriberRepository.flush();
@@ -173,7 +173,7 @@ class JoinServiceTests {
                 " us ",
                 Set.of(
                         SubscriberPreference.EMERGENCY_KIT,
-                        SubscriberPreference.EDUCATIONAL_CONTENT
+                        SubscriberPreference.PRACTICAL_SKILLS
                 )
         ));
 
@@ -196,7 +196,7 @@ class JoinServiceTests {
         assertThat(reloaded.getPreferences())
                 .containsExactlyInAnyOrder(
                         SubscriberPreference.EMERGENCY_KIT,
-                        SubscriberPreference.EDUCATIONAL_CONTENT
+                        SubscriberPreference.PRACTICAL_SKILLS
                 );
 
         assertThat(reloaded.getSubscribedAt()).isAfter(oldSubscribedAt);

@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface SubscriberRepository extends JpaRepository<Subscriber, Long> {
@@ -62,6 +63,28 @@ public interface SubscriberRepository extends JpaRepository<Subscriber, Long> {
     Page<Subscriber> findByStatusAndPreference(
             @Param("status") SubscriberStatus status,
             @Param("preference") SubscriberPreference preference,
+            Pageable pageable
+    );
+
+    @Query(
+            value = """
+                    SELECT DISTINCT s
+                    FROM Subscriber s
+                    JOIN s.preferences preference
+                    WHERE s.status = :status
+                      AND preference IN :preferences
+                    """,
+            countQuery = """
+                    SELECT COUNT(DISTINCT s.id)
+                    FROM Subscriber s
+                    JOIN s.preferences preference
+                    WHERE s.status = :status
+                      AND preference IN :preferences
+                    """
+    )
+    Page<Subscriber> findDistinctByStatusAndPreferencesIn(
+            @Param("status") SubscriberStatus status,
+            @Param("preferences") Set<SubscriberPreference> preferences,
             Pageable pageable
     );
 }

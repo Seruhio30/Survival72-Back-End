@@ -250,4 +250,91 @@ class SubscriberRepositoryTests {
 
         assertThat(newerIndex).isLessThan(olderIndex);
     }
+
+    @Test
+    void findsActiveSubscribersMatchingAnySelectedPreferenceWithoutDuplicates() {
+        Subscriber both = createSubscriber("newsletter-both@example.com");
+        both.setStatus(SubscriberStatus.ACTIVE);
+        both.setPreferences(Set.of(
+                SubscriberPreference.EMERGENCY_KIT,
+                SubscriberPreference.PRACTICAL_SKILLS
+        ));
+
+        Subscriber practicalOnly = createSubscriber("newsletter-practical@example.com");
+        practicalOnly.setStatus(SubscriberStatus.ACTIVE);
+        practicalOnly.setPreferences(Set.of(
+                SubscriberPreference.PRACTICAL_SKILLS
+        ));
+
+        Subscriber eventsOnly = createSubscriber("newsletter-events@example.com");
+        eventsOnly.setStatus(SubscriberStatus.ACTIVE);
+        eventsOnly.setPreferences(Set.of(
+                SubscriberPreference.EVENTS_AND_UPDATES
+        ));
+
+        Subscriber unsubscribedMatch =
+                createSubscriber("newsletter-unsubscribed@example.com");
+        unsubscribedMatch.setStatus(SubscriberStatus.UNSUBSCRIBED);
+        unsubscribedMatch.setUnsubscribedAt(LocalDateTime.now());
+        unsubscribedMatch.setPreferences(Set.of(
+                SubscriberPreference.EMERGENCY_KIT,
+                SubscriberPreference.PRACTICAL_SKILLS
+        ));
+
+        subscriberRepository.saveAllAndFlush(Set.of(
+                both,
+                practicalOnly,
+                eventsOnly,
+                unsubscribedMatch
+        ));
+
+        var page = subscriberRepository.findDistinctByStatusAndPreferencesIn(
+                SubscriberStatus.ACTIVE,
+                Set.of(
+                        SubscriberPreference.EMERGENCY_KIT,
+                        SubscriberPreference.PRACTICAL_SKILLS
+                ),
+                org.springframework.data.domain.PageRequest.of(0, 20)
+        );
+
+        assertThat(page.getContent())
+                .extracting(Subscriber::getEmail)
+                .contains(
+                        "newsletter-both@example.com",
+                        "newsletter-practical@example.com"
+                )
+                .doesNotContain(
+                        "newsletter-events@example.com",
+                        "newsletter-unsubscribed@example.com"
+                );
+
+        assertThat(page.getContent())
+                .filteredOn(item ->
+                        item.getEmail().equals("newsletter-both@example.com"))
+                .hasSize(1);
+
+        assertThat(page.getTotalElements()).isEqualTo(2);
+    }
+
+    @Test
+    void audienceQuerySupportsEventsAndUpdatesPreference() {
+        Subscriber subscriber = createSubscriber("newsletter-events-match@example.com");
+        subscriber.setStatus(SubscriberStatus.ACTIVE);
+        subscriber.setPreferences(Set.of(
+                SubscriberPreference.EVENTS_AND_UPDATES
+        ));
+
+        subscriberRepository.saveAndFlush(subscriber);
+
+        var page = subscriberRepository.findDistinctByStatusAndPreferencesIn(
+                SubscriberStatus.ACTIVE,
+                Set.of(SubscriberPreference.EVENTS_AND_UPDATES),
+                org.springframework.data.domain.PageRequest.of(0, 20)
+        );
+
+        assertThat(page.getContent())
+                .extracting(Subscriber::getEmail)
+                .contains("newsletter-events-match@example.com");
+    }
+
 }

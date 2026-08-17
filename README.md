@@ -90,7 +90,7 @@ Incluye:
 - configuración SMTP sensible se externaliza mediante `MAIL_USERNAME`,
   `MAIL_PASSWORD` y `MAIL_FROM`;
 - `MailConfig` histórico con credenciales hardcodeadas fue eliminado;
-- frontend Admin, subscriber admin, Content, Newsletter nuevo,
+- frontend Admin, subscriber admin UI, dashboard visual,
   retry avanzado/outbox y legacy cleanup siguen pendientes.
 
 Validación dirigida del bloque de email:
@@ -158,7 +158,8 @@ Incluye:
 - endpoint técnico `/api/admin/security-check` limitado a este foundation para
   validar autorización y CSRF; no constituye un dashboard;
 - Content se implementa de forma separada mediante la base administrativa descrita más abajo;
-- no se implementaron Newsletter, subscriber admin UI ni dashboard visual.
+- Newsletter se implementa mediante la base administrativa descrita más abajo;
+- no se implementaron subscriber admin UI ni dashboard visual.
 
 ## Admin subscriber read model
 
@@ -175,8 +176,7 @@ La lectura administrativa segura de subscribers ya está implementada mediante:
 - `managementTokenHash`, tokens raw, campos legacy transitorios y otros datos internos permanecen ocultos;
 - valores inválidos de `page`, `size`, `status` o `preference` devuelven `400 BAD_REQUEST` controlado.
 
-- no se implementaron Newsletter, subscriber admin UI, dashboard visual
-  ni analytics.
+- no se implementaron subscriber admin UI, dashboard visual ni analytics.
 
 ## Admin content foundation
 
@@ -206,10 +206,55 @@ Incluye:
 - POST y PATCH mantienen CSRF obligatorio.
 
 Este foundation es backend-only. Frontend Admin, publicación pública de contenido,
-Newsletter, dashboard, analytics y uploads permanecen fuera de este bloque.
+dashboard, analytics y uploads permanecen fuera de este bloque.
 
 La configuración productiva definitiva de CORS/cookies depende del dominio HTTPS
 final del frontend Admin y permanece pendiente.
+
+
+## Admin newsletter foundation
+
+La gestión administrativa mínima de newsletters ya está implementada en backend.
+
+Incluye:
+
+- entidad `Newsletter`;
+- estados `DRAFT`, `READY_TO_SEND` y `SENT`;
+- persistencia Flyway mediante `newsletter` y `newsletter_preferences`;
+- `subject` y `body` obligatorios;
+- mínimo una preferencia canónica por newsletter;
+- creación siempre en estado `DRAFT`;
+- edición permitida para `DRAFT`;
+- editar una newsletter `READY_TO_SEND` la devuelve automáticamente a `DRAFT`;
+- `SENT` permanece inmutable y no puede fabricarse mediante PATCH;
+- `POST /api/admin/newsletters/{id}/ready` como transición explícita a `READY_TO_SEND`;
+- listado paginado con `page=0`, `size=20`, máximo `100`,
+  filtro opcional por `status` y orden `createdAt DESC, id DESC`;
+- audience preview paginado mediante
+  `GET /api/admin/newsletters/{id}/audience-preview`;
+- audiencia resuelta directamente en base de datos con
+  `status = ACTIVE` y semántica ANY sobre las preferencias seleccionadas;
+- resultados `DISTINCT` para evitar duplicar subscribers que coincidan con
+  varias preferencias;
+- preview administrativo limitado a `id`, `email`, `firstName` y `preferences`,
+  sin exponer management tokens, hashes, sesiones ni entidades JPA;
+- todos los endpoints reutilizan la sesión Admin y CSRF existentes;
+- no existe endpoint `/send` en este foundation;
+- no se realiza envío SMTP ni se marca una newsletter como `SENT` sin una
+  futura operación real de entrega.
+
+Validación del bloque:
+
+- 31 pruebas dirigidas, 0 fallos y 0 errores;
+- suite completa: 192 pruebas, 0 fallos, 0 errores y 0 skipped;
+- `BUILD SUCCESS`;
+- `git diff --check` limpio;
+- Flyway `V6__create_admin_newsletter_tables.sql` y persistencia validados
+  contra MySQL 8 real desde WSL.
+
+Frontend Newsletter, transporte de correo, batching, queue/outbox, retries,
+scheduler, métricas y automatización permanecen fuera de alcance.
+
 
 La credencial histórica de base de datos que todavía existe en
 `application.properties` continúa siendo un riesgo conocido y debe rotarse y

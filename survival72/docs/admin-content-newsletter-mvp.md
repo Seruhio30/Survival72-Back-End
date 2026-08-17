@@ -509,7 +509,6 @@ Conceptually, a newsletter contains:
 - status;
 - created timestamp;
 - updated timestamp;
-- ready timestamp;
 - sent timestamp;
 - selected audience preferences.
 
@@ -539,7 +538,7 @@ The administrator has reviewed the newsletter and intentionally marked it ready.
 
 This prevents an unfinished draft from being sent accidentally.
 
-A newsletter should not be editable while marked `READY_TO_SEND` without explicitly returning it to `DRAFT`.
+For the implemented MVP foundation, editing a `READY_TO_SEND` newsletter automatically returns it to `DRAFT`, requiring the administrator to mark it ready again.
 
 ### SENT
 
@@ -617,7 +616,7 @@ The existing canonical repository currently supports lookup by:
 - email;
 - management token hash.
 
-The Admin/Newsletter implementation will require new query behavior.
+The Admin/Newsletter implementation now includes the required query behavior.
 
 Conceptually:
 
@@ -677,7 +676,7 @@ Use a composite unique or primary key so the same preference cannot be assigned 
 
 Values must use the existing canonical preference enum values.
 
-### Proposed new table: `newsletter`
+### Implemented table: `newsletter`
 
 Conceptual columns:
 
@@ -687,10 +686,9 @@ Conceptual columns:
 - `status`
 - `created_at`
 - `updated_at`
-- `ready_at`
 - `sent_at`
 
-### Proposed new table: `newsletter_preferences`
+### Implemented table: `newsletter_preferences`
 
 Conceptual columns:
 
@@ -777,7 +775,6 @@ If explicit commands prove clearer during implementation, publish/archive endpoi
 - `PATCH /api/admin/newsletters/{id}`
 - `GET /api/admin/newsletters/{id}/audience-preview`
 - `POST /api/admin/newsletters/{id}/ready`
-- `POST /api/admin/newsletters/{id}/send`
 
 ### Audience preview
 
@@ -789,19 +786,17 @@ Returning an entire email list is not required for the initial MVP.
 
 ### Send endpoint
 
-`POST /api/admin/newsletters/{id}/send`
+A Newsletter send endpoint is intentionally not implemented in the current foundation.
 
-is a manual administrative command.
+The backend stops at `READY_TO_SEND` because no reliable delivery transport is part of this block.
 
-It must never be a `GET`.
+A future real send operation must:
 
-It must require:
-
-- authenticated admin;
-- CSRF protection where applicable;
-- newsletter status `READY_TO_SEND`.
-
-The final delivery implementation must resolve the ACTIVE audience again immediately before sending.
+- require authenticated admin access;
+- require CSRF protection;
+- accept only a newsletter in `READY_TO_SEND`;
+- resolve the distinct ACTIVE audience again immediately before delivery;
+- mark the newsletter `SENT` only after the future delivery contract determines that sending completed successfully.
 
 ---
 
